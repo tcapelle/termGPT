@@ -9,7 +9,8 @@ This program uses the OpenAI API to create a chatbot that can converse with user
 ```bash
 $ pip install termgpt
 ```
-You can also install this tool and have it available on your terminal:
+
+## Usage
 
 ```bash
 $ gpt 
