@@ -20,23 +20,22 @@ def parse_args():
   parser.add_argument("file", type=str, nargs="?", default=None, help="File to read [optional]")
   return parser.parse_args()
 
-if __name__ == "__main__":
-  args = parse_args()
-  if args.file:
-    with open(args.file, "r") as f:
-      history.append({"role": "user", "content": "I will ask question about this file" + f.read()})
+args = parse_args()
+if args.file:
+  with open(args.file, "r") as f:
+    history.append({"role": "user", "content": "I will ask question about this file" + f.read()})
 
-  while q := console.input("[bold red]> [/]"):
-    history.append({"role": "user", "content": q})
+while q := console.input("[bold red]> [/]"):
+  history.append({"role": "user", "content": q})
 
-    r=openai.ChatCompletion.create(
-      model="gpt-3.5-turbo",
-      messages=history,
-    )
-    out = r["choices"][0]["message"]["content"]
-    formated_out = Text(out, justify="right")
-    history.append({"role": "assistant", "content": out})
-    console.print(f"\n[bold green]{out}[/]\n")
+  r=openai.ChatCompletion.create(
+    model="gpt-3.5-turbo",
+    messages=history,
+  )
+  out = r["choices"][0]["message"]["content"]
+  formated_out = Text(out, justify="right")
+  history.append({"role": "assistant", "content": out})
+  console.print(f"\n[bold green]{out}[/]\n")
 
 
 
