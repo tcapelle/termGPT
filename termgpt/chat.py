@@ -20,21 +20,14 @@ history = [
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "file", type=str, nargs="?", default=None, help="File to read [optional]"
-    )
+    parser.add_argument("file", type=str, nargs="?", default=None, help="File to read [optional]")
     return parser.parse_args()
 
 
 args = parse_args()
 if args.file:
     with open(args.file, "r") as f:
-        history.append(
-            {
-                "role": "user",
-                "content": "I will ask question about this file" + f.read(),
-            }
-        )
+        history.append({"role": "user", "content": "I will ask question about this file" + f.read()})
 
 while q := console.input("[bold red]> [/]"):
     history.append({"role": "user", "content": q})
