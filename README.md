@@ -18,6 +18,8 @@ python termgpt/chat.py filename.txt
 
 
 ## Install
+You will need and `openAI` api key, the app expects that the key is available as an environment variable: `OPENAI_API_KEY`.
+
 ```bash
 $ pip install termgpt
 ```
