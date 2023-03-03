@@ -1,3 +1,5 @@
 key
 build/
 /**/*.egg-info
+/**/*.whl
+/**/*.gz
