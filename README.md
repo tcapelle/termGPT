@@ -19,8 +19,8 @@ python termgpt/chat.py filename.txt
 
 ## Install
 ```bash
-$ pip install 
-
+$ pip install termgpt
+```
 You can also install this tool and have it available on your terminal:
 ```
 
