@@ -29,14 +29,15 @@ if args.file:
     with open(args.file, "r") as f:
         history.append({"role": "user", "content": "I will ask question about this file" + f.read()})
 
-while q := console.input("[bold red]> [/]"):
-    history.append({"role": "user", "content": q})
+def main():
+    while q := console.input("[bold red]> [/]"):
+        history.append({"role": "user", "content": q})
 
-    r = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=history,
-    )
-    out = r["choices"][0]["message"]["content"]
-    formated_out = Text(out, justify="right")
-    history.append({"role": "assistant", "content": out})
-    console.print(f"\n[bold green]{out}[/]\n")
+        r = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=history,
+        )
+        out = r["choices"][0]["message"]["content"]
+        formated_out = Text(out, justify="right")
+        history.append({"role": "assistant", "content": out})
+        console.print(f"\n[bold green]{out}[/]\n")
