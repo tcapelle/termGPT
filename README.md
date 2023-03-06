@@ -52,3 +52,23 @@ often has a Gaussian distribution. GeLU is similar to ReLU in terms of its compu
 performance of a neural network by providing a more accurate representation of the input data.
 > 
 ```
+
+
+## [New] Run commands in your Terminal (at your own risk!)
+
+```bash
+$ gpt -c "list all files in this folder with sizes"
+```
+ls -lh
+```
+total 40
+-rw-r--r--  1 tcapelle  staff   2.4K Mar  6 09:43 README.md
+drwxr-xr-x  4 tcapelle  staff   128B Mar  3 16:22 build
+-rw-r--r--  1 tcapelle  staff   276B Mar  6 13:55 chatgpt_history.json
+drwxr-xr-x  4 tcapelle  staff   128B Mar  3 17:07 dist
+-rw-r--r--  1 tcapelle  staff    51B Mar  3 15:33 key
+-rw-r--r--  1 tcapelle  staff   2.5K Mar  3 16:40 lotr.txt
+-rw-r--r--  1 tcapelle  staff   955B Mar  3 18:17 setup.py
+drwxr-xr-x  6 tcapelle  staff   192B Mar  6 09:00 termgpt
+drwxr-xr-x  8 tcapelle  staff   256B Mar  6 08:34 termgpt.egg-info
+```
