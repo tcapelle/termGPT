@@ -1,4 +1,5 @@
-import os, argparse, json, atexit
+import os, argparse, json, atexit, subprocess
+from sys import platform
 
 import openai
 
@@ -17,15 +18,21 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("file", type=str, nargs="?", default=None, help="File to read [optional]")
     parser.add_argument("-r", "--resume", action="store_true", help="Resume previous session")
+    parser.add_argument("-c", "--command", type=str, default=None, help="Command to run [optional]")
     return parser.parse_args()
 
 
 class Chat:
     """Class to handle chat with chatGPT, supports history and load from file"""
 
-    def __init__(self, file=None, resume=False):
+    def __init__(self, file=None, resume=False, command=None):
         self.history_file = "chatgpt_history.json"
-        self.history = [{"role": "system", "content": "You are a helpful assistant."}, ]
+        if command:
+            self.history = [{"role": "system", "content": f"Reply only with the terminal command required to perform the action on {platform}. Nothing else. In plain text, no fancy output."}, ]
+            cmd = self(command)
+            self.exec(cmd=cmd)
+        else:
+            self.history = [{"role": "system", "content": "You are a helpful assistant."}, ]
         if resume:
             with open(self.history_file, "r") as f:
                 self.history = json.load(f)
@@ -56,6 +63,14 @@ class Chat:
         out = r["choices"][0]["message"]["content"]
         self.add("assistant", out)
         console.print(Text(out, style="bold green"))
+        return out
+
+    def exec(self, cmd):
+        try:
+            cmd = cmd.replace("`", "")
+            subprocess.run(cmd, shell=True, check=True)
+        except Exception as e:
+            console.print("[bold red]Error executing command: [/]" + str(e))
 
     def input(self):
         q = console.input("[bold red]> [/]")
@@ -68,7 +83,8 @@ class Chat:
 
 def main():
     args = parse_args()
-    chat = Chat(file=args.file, resume=args.resume)
+    chat = Chat(file=args.file, resume=args.resume, command=args.command)
     atexit.register(chat.save)
-    while q := chat.input():
-        chat(q)
+    if not args.command:
+        while q := chat.input():
+            _ = chat(q)
