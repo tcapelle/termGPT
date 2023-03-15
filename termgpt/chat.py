@@ -8,6 +8,10 @@ from rich.console import Console
 
 console = Console()
 
+GPT3 = "gpt-3.5-turbo"
+GPT4 = "gpt-4"  # if you have access...
+
+
 # set api key
 openai.api_key = os.getenv("OPENAI_API_KEY")
 if not openai.api_key:
@@ -25,8 +29,9 @@ def parse_args():
 class Chat:
     """Class to handle chat with chatGPT, supports history and load from file"""
 
-    def __init__(self, file=None, resume=False, command=None):
+    def __init__(self, model_name=GPT3, file=None, resume=False, command=None):
         self.history_file = "chatgpt_history.json"
+        self.model_name=model_name
         if command:
             self.history = [{"role": "system", "content": f"Reply only with the terminal command required to perform the action on {platform}. Nothing else. In plain text, no fancy output."}, ]
             cmd = self(command)
@@ -57,7 +62,7 @@ class Chat:
     def __call__(self, question):
         self.add("user", question)
         r = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=self.model_name,
             messages=self.history,
         )
         out = r["choices"][0]["message"]["content"]
@@ -81,10 +86,13 @@ class Chat:
             json.dump(self.history, f)
 
 
-def main():
+def main(model_name):
     args = parse_args()
-    chat = Chat(file=args.file, resume=args.resume, command=args.command)
+    chat = Chat(model_name, file=args.file, resume=args.resume, command=args.command)
     atexit.register(chat.save)
     if not args.command:
         while q := chat.input():
             _ = chat(q)
+
+def gpt3(): main(GPT3)
+def gpt4(): main(GPT4)

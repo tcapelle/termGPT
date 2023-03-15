@@ -29,5 +29,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.10",
     ],
-    entry_points={"console_scripts": ["gpt=termgpt.chat:main"]},
+    entry_points={"console_scripts": ["gpt3=termgpt.chat:gpt3",
+                                      "gpt4=termgpt.chat:gpt4"]},
 )
