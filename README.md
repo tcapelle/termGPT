@@ -4,7 +4,10 @@
 
 This program uses the OpenAI API to create a chatbot that can converse with users. The chatbot is powered by the GPT-3.5-turbo language model and can answer a wide range of questions.
 
+# Breaking change: Now you can call gpt3 or gpt4 (if you have an api key for it)
+Beware that using gpt4 is very expensive, so use it with care.
 
+```bash
 ## Install
 > You will need and `openAI` api key, the app expects that the key is available as an environment variable: `OPENAI_API_KEY`.
 
@@ -15,7 +18,7 @@ $ pip install termgpt
 ## Usage
 
 ```bash
-$ gpt 
+$ gpt3 
 > who are you?
 
 I am an AI language model created by OpenAI. My purpose is to be of assistance and respond to your queries to the best of my abilities.
@@ -24,7 +27,7 @@ I am an AI language model created by OpenAI. My purpose is to be of assistance a
 or ask question about a file:
 
 ```bash
-$ gpt lotr.txt
+$ gpt3 lotr.txt
 > what is this file about?
 
 This file is about The Lord of the Rings, a high-fantasy novel by J.R.R. Tolkien. It describes the plot, characters, and setting of the book, as well as its publication history, critical 
@@ -36,7 +39,7 @@ reception, and cultural impact. It also mentions Tolkien's influences and the nu
 We keep track of your conversation on a file now `chatgpt_history.json` so we can resume from it by passing the `-r` flag.
 
 ```bash
-$ gpt -r
+$ gpt3 -r
 --Resuming previous session--
 [System] You are a helpful assistant.
 
@@ -57,7 +60,7 @@ performance of a neural network by providing a more accurate representation of t
 ## [New] Run commands in your Terminal (at your own risk!)
 
 ```bash
-$ gpt -c "list all files in this folder with sizes"
+$ gpt3 -c "list all files in this folder with sizes"
 ```
 ls -lh
 ```
