@@ -2,14 +2,13 @@
 
 # OpenAI Chatbot
 
-This program uses the OpenAI API to create a chatbot that can converse with users. The chatbot is powered by the GPT-3.5-turbo language model and can answer a wide range of questions.
+This program uses the OpenAI API to create a chatbot that can converse with users. The chatbot is powered by the GPT-3.5-turbo (or 4) language model and can answer a wide range of questions. If you are like me and want to stay in the terminal, this is the tool for you.
 
 # Breaking change: Now you can call gpt3 or gpt4 (if you have an api key for it)
-Beware that using gpt4 is very expensive, so use it with care.
+Beware that using gpt4 is expensive (15x more than 3.5-turbo), so use it with care.
 
-```bash
 ## Install
-> You will need and `openAI` api key, the app expects that the key is available as an environment variable: `OPENAI_API_KEY`.
+You will need and `openAI` api key, the app expects that the key is available as an environment variable: `OPENAI_API_KEY`.
 
 ```bash
 $ pip install termgpt
@@ -75,3 +74,24 @@ drwxr-xr-x  4 tcapelle  staff   128B Mar  3 17:07 dist
 drwxr-xr-x  6 tcapelle  staff   192B Mar  6 09:00 termgpt
 drwxr-xr-x  8 tcapelle  staff   256B Mar  6 08:34 termgpt.egg-info
 ```
+
+## Recover output
+
+The history of your conversation is stored in `chatgpt_history.json` so you can recover it later. You also use the `-o` flago to store the output in a plain text file.
+
+```bash
+$ Can you write a short poem about chatbots, guacamole and cars?
+
+Chatbots beep and bloop,
+Serving customers with ease,
+Guac and chips in hand.
+
+Cars race on, onwards,
+As chatbots assist the ride,
+Dipping chips divine.
+
+Time taken: 2.27 seconds
+Saving history to chatgpt_history.json, you can restore this session with `--resume`
+Saving output to poem.txt
+```
+
