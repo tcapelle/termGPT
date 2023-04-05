@@ -95,7 +95,7 @@ class Chat:
         return q
 
     def save(self):
-        print(f"Saving history to {self.history_file}, you can restore this session with `--resume`")
+        print(f"-------------\nSaving history to {self.history_file}, you can restore this session with `--resume`")
         with open(self.history_file, "w") as f:
             json.dump(self.history, f)
         if self.out_file is not None:
