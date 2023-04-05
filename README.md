@@ -77,10 +77,11 @@ drwxr-xr-x  8 tcapelle  staff   256B Mar  6 08:34 termgpt.egg-info
 
 ## Recover output
 
-The history of your conversation is stored in `chatgpt_history.json` so you can recover it later. You also use the `-o` flago to store the output in a plain text file.
+The history of your conversation is stored in `chatgpt_history.json` so you can recover it later. You also use the `-o` flag to store the output in a plain text file.
 
 ```bash
-$ Can you write a short poem about chatbots, guacamole and cars?
+$ gpt3 -o "poem.txt"
+> Can you write a short poem about chatbots, guacamole and cars?
 
 Chatbots beep and bloop,
 Serving customers with ease,
