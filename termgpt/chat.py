@@ -1,4 +1,4 @@
-import os, argparse, json, atexit, subprocess
+import os, argparse, json, atexit, subprocess, time
 from sys import platform
 
 import openai
@@ -46,7 +46,7 @@ class Chat:
                 self._print_history(self.history)
         if file:
             with open(file, "r") as f:
-                self.history.append({"role": "user", "content": "I will ask question about this file" + f.read()})
+                self.history.append({"role": "user", "content": "I will ask question about this file:\n" + f.read()})
 
     def _print_history(self, history):
         console.print("--Resuming previous session--")
@@ -63,13 +63,16 @@ class Chat:
     
     def __call__(self, question):
         self.add("user", question)
+        t0 = time.perf_counter()
         r = openai.ChatCompletion.create(
             model=self.model_name,
             messages=self.history,
         )
         out = r["choices"][0]["message"]["content"]
         self.add("assistant", out)
+        total_time = time.perf_counter() - t0
         console.print(Text(out, style="bold green"))
+        console.print(f"Time taken: {total_time:.2f} seconds")
         return out
 
     def exec(self, cmd):
@@ -98,7 +101,7 @@ class Chat:
         if self.out_file is not None:
             with open(self.out_file, "w") as out_f:
                 print(f"Saving output to {self.out_file}")
-                out_f.writelines("".join([h["content"] for h in self.history]))
+                out_f.writelines([h["content"] for h in self.history])
 
 def main(model_name):
     args = parse_args()
