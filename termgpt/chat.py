@@ -1,4 +1,5 @@
 import os, argparse, json, atexit, subprocess, time
+from dataclasses import dataclass
 
 import openai
 
@@ -12,6 +13,7 @@ console = Console()
 
 GPT3 = "gpt-3.5-turbo"
 GPT4 = "gpt-4"  # if you have access...
+PRICING = {GPT3: (0.02, 0.02), GPT4: (0.03, 0.06)} # prices per 1k tokens
 
 if not os.getenv("OPENAI_API_KEY"):
     console.print("[bold red]Please set `OPENAI_API_KEY` environment variable[/]")
@@ -26,6 +28,26 @@ def parse_args():
     parser.add_argument("-no_md", "--no_markdown", action="store_false", help="Disable markdown rendering")
     return parser.parse_args()
 
+@dataclass
+class APIStats:
+    """Class to handle API usage stats"""
+    model_name: str = GPT3
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
+    def cost(self):
+        token_prices = PRICING[self.model_name]
+        return (token_prices[0] * self.prompt_tokens + token_prices[1] * self.completion_tokens) / 1000
+
+    def update(self, stats):
+        self.prompt_tokens += stats['prompt_tokens']
+        self.completion_tokens += stats['completion_tokens']
+        self.total_tokens += stats['total_tokens']
+
+    def __str__(self):
+        return (f"Prompt tokens: {self.prompt_tokens}, Completion tokens: {self.completion_tokens}, "
+                f"Total tokens: {self.total_tokens}, Estimated cost: ${self.cost():.2f}")
 
 class Chat:
     """Class to handle chat with chatGPT, supports history and load from file"""
@@ -34,6 +56,7 @@ class Chat:
         self.history_file = "chatgpt_history.json"
         self.out_file=out_file
         self.model_name=model_name
+        self.usage = APIStats(model_name=model_name)
         self.output_render = Markdown if markdown else Text
         if command:
             self.history = [{"role": "system", "content": commander_role}, ]
@@ -70,6 +93,7 @@ class Chat:
             messages=self.history,
         )
         out = r["choices"][0]["message"]["content"]
+        self.usage.update(r['usage'])
         self.add("assistant", out)
         total_time = time.perf_counter() - t0
         console.print(self.output_render(out, style="bold green"))
@@ -96,7 +120,8 @@ class Chat:
         return q
 
     def save(self):
-        print(f"-------------\nSaving history to {self.history_file}, you can restore this session with `--resume`")
+        console.print(f"-------------\nSaving history to {self.history_file}, you can restore this session with `--resume`")
+        console.print(str(self.usage))
         with open(self.history_file, "w") as f:
             json.dump(self.history, f)
         if self.out_file is not None:
