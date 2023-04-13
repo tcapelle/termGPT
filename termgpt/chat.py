@@ -1,52 +1,53 @@
 import os, argparse, json, atexit, subprocess, time
-from sys import platform
 
 import openai
 
 from rich.text import Text
 from rich.console import Console
+from rich.markdown import Markdown
+
+from termgpt.roles import assistant_role, document_role, commander_role
 
 console = Console()
 
 GPT3 = "gpt-3.5-turbo"
 GPT4 = "gpt-4"  # if you have access...
 
-
-# # set api key
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
+if not os.getenv("OPENAI_API_KEY"):
     console.print("[bold red]Please set `OPENAI_API_KEY` environment variable[/]")
     exit(1)
 
 def parse_args():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(usage="termGPT [options] [file]", description="Chat with GPT-3/4. If no file is provided, you will be prompted to enter a question.")
     parser.add_argument("file", type=str, nargs="?", default=None, help="File to read [optional]")
     parser.add_argument("-r", "--resume", action="store_true", help="Resume previous session")
     parser.add_argument("-c", "--command", type=str, default=None, help="Command to run [optional]")
     parser.add_argument("-o", "--outfile", type=str, default=None, help="Output file [optional]")
+    parser.add_argument("-no_md", "--no_markdown", action="store_false", help="Disable markdown rendering")
     return parser.parse_args()
 
 
 class Chat:
     """Class to handle chat with chatGPT, supports history and load from file"""
 
-    def __init__(self, model_name=GPT3, file=None, resume=False, command=None, out_file=None):
+    def __init__(self, model_name=GPT3, file=None, resume=False, command=None, out_file=None, markdown=True):
         self.history_file = "chatgpt_history.json"
         self.out_file=out_file
         self.model_name=model_name
+        self.output_render = Markdown if markdown else Text
         if command:
-            self.history = [{"role": "system", "content": f"Reply only with the terminal command required to perform the action on {platform}. Nothing else. In plain text, no fancy output."}, ]
+            self.history = [{"role": "system", "content": commander_role}, ]
             cmd = self(command)
             self.exec(cmd=cmd)
         else:
-            self.history = [{"role": "system", "content": "You are a helpful assistant."}, ]
+            self.history = [{"role": "system", "content": assistant_role}, ]
         if resume:
             with open(self.history_file, "r") as f:
                 self.history = json.load(f)
                 self._print_history(self.history)
         if file:
             with open(file, "r") as f:
-                self.history.append({"role": "user", "content": "I will ask question about this file:\n" + f.read()})
+                self.history = [{"role": "system", "content":  document_role + f.read()}, ]
 
     def _print_history(self, history):
         console.print("--Resuming previous session--")
@@ -56,7 +57,7 @@ class Chat:
             elif h["role"] == "user":
                 console.print("[bold red]> [/]" + h["content"])
             else:
-                console.print(Text(h["content"], style="bold green"))
+                console.print(self.output_render(h["content"]))
 
     def add(self, role, content):
         self.history.append({"role": role, "content": content})
@@ -71,15 +72,15 @@ class Chat:
         out = r["choices"][0]["message"]["content"]
         self.add("assistant", out)
         total_time = time.perf_counter() - t0
-        console.print(Text(out, style="bold green"))
+        console.print(self.output_render(out, style="bold green"))
         console.print(f"Time taken: {total_time:.2f} seconds")
         return out
 
     def exec(self, cmd):
         """Refine the command to be executed"""
         cmd = cmd.replace("`", "")
-        q = console.input(f"[bold red]Execute this command:[/] `${cmd}` (y/n) ")
-        if q.lower() == "y":
+        q = console.input(f"[bold red]Execute this command (press return to run):[/] \n$ {cmd}").lower()
+        if (q == "y") or (q == ""):
             self.run_cmd(cmd)
         else:
             pass
@@ -103,12 +104,16 @@ class Chat:
                 print(f"Saving output to {self.out_file}")
                 out_f.writelines([h["content"] for h in self.history])
 
+exit_commands = ["exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"]
+
 def main(model_name):
     args = parse_args()
-    chat = Chat(model_name, file=args.file, resume=args.resume, command=args.command, out_file=args.outfile)
+    chat = Chat(model_name, file=args.file, resume=args.resume, command=args.command, out_file=args.outfile, markdown=args.no_markdown)
     atexit.register(chat.save)
     if not args.command:
         while q := chat.input():
+            if q in exit_commands:
+                break
             _ = chat(q)
 
 def gpt3(): main(GPT3)
