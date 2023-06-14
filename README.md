@@ -2,6 +2,8 @@
 
 # OpenAI Chatbot
 
+![](assets/termGPT.gif)
+
 This program uses the OpenAI API to create a chatbot that can converse with users. The chatbot is powered by the GPT-3.5-turbo (or 4) language model and can answer a wide range of questions. If you are like me and want to stay in the terminal, this is the tool for you.
 
 # Breaking change: Now you can call gpt3 or gpt4 (if you have an api key for it)
