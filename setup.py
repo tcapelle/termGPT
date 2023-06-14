@@ -30,5 +30,6 @@ setup(
         "Programming Language :: Python :: 3.10",
     ],
     entry_points={"console_scripts": ["gpt3=termgpt.chat:gpt3",
-                                      "gpt4=termgpt.chat:gpt4"]},
+                                      "gpt4=termgpt.chat:gpt4",
+                                      "claude=termgpt.chat:claude",]},
 )
