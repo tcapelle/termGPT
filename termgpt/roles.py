@@ -17,8 +17,7 @@ commander_role = dedent(f"""\
     """)
 
 document_role = dedent("""\
-    I will ask question about this document.
-    - If the question is not related to the document, just say "I'm not sure how to respond to that
+    I will ask question about this document. Use this document as context to answer.
     The document:
     """)
 
