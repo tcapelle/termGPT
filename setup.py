@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "rich",
         "openai",
+        "anthropic",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
