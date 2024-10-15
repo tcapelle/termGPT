@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/termgpt.svg)](https://badge.fury.io/py/termgpt)
 
-# OpenAI Chatbot
+# termGPT: OpenAI Chatbot in the Terminal
 
 ![](assets/termGPT.gif)
 
