@@ -34,15 +34,6 @@ $ llm
 I am an AI language model created by OpenAI. My purpose is to assist and respond to your queries to the best of my abilities.
 ```
 
-**Chat with a File:**
-
-```bash
-$ llm lotr.txt
-> what is this file about?
-
-This file is about The Lord of the Rings, a high-fantasy novel by J.R.R. Tolkien. It describes the plot, characters, setting, and the work's impact on modern fantasy literature.
-```
-
 **Resume Previous Conversation:**
 
 TermGPT now keeps track of your conversation in `chatgpt_history.json`, so you can resume a previous session with the `-r` flag.
