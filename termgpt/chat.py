@@ -5,7 +5,7 @@ import simple_parsing as sp
 
 from termgpt.llm import LLM
 
-DEFAULT_LLM = "gpt-4o"
+DEFAULT_LLM = "gemini/gemini-2.0-flash"
 EXIT_COMMANDS = ["exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"]
 
 @dataclass
