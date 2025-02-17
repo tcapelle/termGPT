@@ -3,7 +3,7 @@ import warnings
 import os
 
 # Global configuration
-DEFAULT_HISTORY_LINES = 100
+DEFAULT_HISTORY_LINES = 400
 
 def get_zsh_history(num_lines=DEFAULT_HISTORY_LINES):
     """

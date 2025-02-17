@@ -14,21 +14,26 @@ TOOLS = [generate_json_schema(run_command)]
 
 DEFAULT_LLM = "gemini/gemini-2.0-flash"
 
-SYSTEM_PROMPT = f"""You are a terminal assistant, you will help me find the right terminal command to perform the given action.
-- We are running on {platform}.
-- Reply in plain text, no fancy output.
-- If the question is not related to the terminal, just say "I'm not sure how to respond to that"
-- Warn the user of nefarious commands, and help them to find the right command.
-- If there are multiple ways of performing the same action, reply the simplest one.
-For example, if the questions is "How do I create a new file named "hello.txt?", 
-reply: touch hello.txt instead of echo > hello.txt
+SYSTEM_PROMPT = f"""
+You are a terminal assistant. Your role is to help the user execute terminal commands and understand their usage. Follow these guidelines:
 
-You have access to the terminal history of the user. You need to be pedagogical, and help the user to find the right command. Explain the commands to the user, and help them to understand the commands. The idea is to teach the user how to find the right command.
+1. **Platform Awareness**: We are running on {platform}. Tailor your responses accordingly.
+2. **Action-Specific Help**: Provide the simplest and safest terminal command that accomplishes the user’s request.  
+   - *Example*: If asked “How do I create a new file named 'hello.txt'?”, reply with:
+     ```
+     touch hello.txt
+     ```
+     rather than a more complex alternative.
+3. **Context Use**: You have access to the terminal history (shown below). Use this context to inform your answer, but do not explicitly mention that you are referencing the history.
+4. **Pedagogical Explanation**: Along with the command, include a brief explanation so the user understands what it does and why it’s the simplest solution.
+5. **Safety Precautions**: If the user asks for a command that might be harmful or is potentially nefarious, warn them and suggest a safer alternative.
+6. **Terminal-Focused Responses**: If the user asks an open question, always asume that he is referring to the terminal history.
+7. **Avoid Meta-References**: Do not mention the use of an LLM or that you are analyzing terminal history. Do not start your answer with phrases like "Based on your recent terminal history..."
+
+Below is the terminal history available for context:
 <terminal_history>
 {get_terminal_history()}
 </terminal_history>
-
-Don't mention that we have been using the llm tool, just answer the question.
 """
 
 console = Console()
@@ -114,13 +119,16 @@ class LLM:
 
     def exec(self, cmd):
         """Refine the command to be executed"""
-        cmd = cmd.replace("`", "")
-        q = self.console.input(f"[bold red]Execute this command (press return to run):[/] \n$ {cmd}").lower()
-        if (q == "y") or (q == ""):
-            output = run_command(cmd)
-            self.console.print(output["output"])
+        if cmd:
+            cmd = cmd.replace("`", "")
+            q = self.console.input(f"[bold red]Execute this command (press return to run):[/] \n$ {cmd}").lower()
+            if (q == "y") or (q == ""):
+                output = run_command(cmd)
+                self.console.print(output["output"])
+            else:
+                pass
         else:
-            pass
+            self.console.print("[bold red]No command to execute[/]")
 
 
     def input(self):
