@@ -1,4 +1,4 @@
-import json, subprocess, time
+from sys import platform
 
 from rich.text import Text
 from rich.console import Console
@@ -7,9 +7,48 @@ from rich.markdown import Markdown
 
 from litellm import completion
 
-from termgpt.roles import assistant_role, commander_role
+from termgpt.tools import run_command, generate_json_schema
+from termgpt.history import get_terminal_history
 
-DEFAULT_LLM = "gpt-4o"
+TOOLS = [generate_json_schema(run_command)]
+
+DEFAULT_LLM = "gemini/gemini-2.0-flash"
+
+SYSTEM_PROMPT = f"""You are a terminal assistant, you will help me find the right terminal command to perform the given action.
+- We are running on {platform}.
+- Reply in plain text, no fancy output.
+- If the question is not related to the terminal, just say "I'm not sure how to respond to that"
+- Warn the user of nefarious commands, and help them to find the right command.
+- If there are multiple ways of performing the same action, reply the simplest one.
+For example, if the questions is "How do I create a new file named "hello.txt?", 
+reply: touch hello.txt instead of echo > hello.txt
+
+You have access to the terminal history of the user. You need to be pedagogical, and help the user to find the right command. Explain the commands to the user, and help them to understand the commands. The idea is to teach the user how to find the right command.
+<terminal_history>
+{get_terminal_history()}
+</terminal_history>
+"""
+
+console = Console()
+
+class MyConsole:
+    def print(self, *args, **kwargs):
+        console.print(*args, **kwargs)
+
+    @staticmethod
+    def chat_response_start() -> None:
+        pass
+
+    @staticmethod
+    def chat_message_content_delta(message_content_delta: str) -> None:
+        console.print(message_content_delta, end="")
+
+    @staticmethod
+    def chat_response_complete() -> None:
+        console.print("\n")
+
+    def input(self) -> str:
+        return console.input("[bold red]> [/]")
 
 class LLM:
     """Class to handle chat with LLM, supports history."""
@@ -17,66 +56,39 @@ class LLM:
     def __init__(
             self, 
             model_name: str = DEFAULT_LLM, 
-            resume: bool = False, 
-            command: str = None, 
-            out_file: str = None, 
-            markdown: bool = True
+            debug: bool = False,
             ):
         self.model_name = model_name
-        self.console = console = Console()
-        self.history_file = "chatgpt_history.json"
-        self.out_file=out_file
-        self.output_render = Markdown if markdown else Text
-        if command:
-            self.history = [{"role": "system", "content": commander_role}, ]
-            cmd = self(command)
-            self.exec(cmd=cmd)
-        else:
-            self.history = [{"role": "system", "content": assistant_role}, ]
-        if resume:
-            with open(self.history_file, "r") as f:
-                self.history = json.load(f)
-                self._print_history(self.history)
+        self.console = MyConsole()
+        self.history_file = "llm_history.json"
+        self.messages = [{"role": "system", "content": SYSTEM_PROMPT}, ]
+        self.debug = debug
 
     def call(self):
-        prompt = self.preprocess_query()
+        self.console.chat_response_start()
+        if self.debug:
+            console.print(self.messages)
         response = completion(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=self.messages,
             max_tokens=1000,
+            stream=True,
         )
-        return response.choices[0].message.content
-
-    def preprocess_query(self):
-        query = ""
-        for h in self.history:
-            if h["role"] == "user" or h["role"] == "system":
-                query += "\n\nHuman: " + h["content"] + "\n"
-            elif h["role"] == "assistant":
-                query += "\n\nAssistant: "+ h["content"] + "\n"
-        return query
-
-    def _print_history(self, history):
-        self.console.print("--Resuming previous session--")
-        for h in history:
-            if h["role"] == "system":
-                self.console.print(Text("[System] " + h["content"] +"\n", style="bold green"))
-            elif h["role"] == "user":
-                self.console.print("[bold red]> [/]" + h["content"])
-            else:
-                self.console.print(self.output_render(h["content"]))
+        final_response = ""
+        for chunk in response:
+            if chunk.choices[0].delta.content:
+                final_response += chunk.choices[0].delta.content
+                self.console.chat_message_content_delta(f"[bold green]{chunk.choices[0].delta.content}[/bold green]")
+        self.console.chat_response_complete()
+        return final_response
 
     def append(self, role, content):
-        self.history.append({"role": role, "content": content})
+        self.messages.append({"role": role, "content": content})
 
     def __call__(self, question):
         self.append("user", question)
-        t0 = time.perf_counter()
         out = self.call()
         self.append("assistant", out)
-        total_time = time.perf_counter() - t0
-        self.console.print(self.output_render(out, style="bold green"))
-        self.console.print(f"Time taken: {total_time:.2f} seconds")
         return out
 
     def exec(self, cmd):
@@ -89,19 +101,7 @@ class LLM:
             pass
 
     def run_cmd(self, cmd):
-        try:
-            subprocess.run(cmd, shell=True, check=True)
-        except Exception as e:
-            self.console.print("[bold red]Error executing command: [/]" + str(e))
+        run_command(cmd)
 
     def input(self):
-        return self.console.input("[bold red]> [/]")
-
-    def save(self):
-        with open(self.history_file, "w") as f:
-            json.dump(self.history, f)
-        if self.out_file is not None:
-            with open(self.out_file, "w") as out_f:
-                print(f"Saving output to {self.out_file}")
-                out_f.writelines([h["content"] for h in self.history])
-        self.console.print(f"-------------\nSaving history to {self.history_file}, you can restore this session with `--resume`")
+        return self.console.input()
