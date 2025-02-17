@@ -1,8 +1,6 @@
 from sys import platform
 
-from rich.text import Text
 from rich.console import Console
-from rich.markdown import Markdown
 
 
 from litellm import completion
