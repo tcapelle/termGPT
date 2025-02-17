@@ -1,6 +1,8 @@
 from sys import platform
-
+from typing import Optional
+from pydantic import BaseModel, Field
 from rich.console import Console
+
 
 
 from litellm import completion
@@ -25,9 +27,15 @@ You have access to the terminal history of the user. You need to be pedagogical,
 <terminal_history>
 {get_terminal_history()}
 </terminal_history>
+
+Don't mention that we have been using the llm tool, just answer the question.
 """
 
 console = Console()
+
+class LLMResponse(BaseModel):
+    response: str = Field(description="A one-liner explanation of the command to execute.")
+    command: Optional[str] = Field(description="The command to execute, if applicable")
 
 class MyConsole:
     def print(self, *args, **kwargs):
@@ -45,8 +53,8 @@ class MyConsole:
     def chat_response_complete() -> None:
         console.print("\n")
 
-    def input(self) -> str:
-        return console.input("[bold red]> [/]")
+    def input(self, prompt="[bold red]> [/]") -> str:
+        return console.input(prompt)
 
 class LLM:
     """Class to handle chat with LLM, supports history."""
@@ -55,30 +63,45 @@ class LLM:
             self, 
             model_name: str = DEFAULT_LLM, 
             debug: bool = False,
+            interactive: bool = True,
             ):
         self.model_name = model_name
         self.console = MyConsole()
         self.history_file = "llm_history.json"
         self.messages = [{"role": "system", "content": SYSTEM_PROMPT}, ]
         self.debug = debug
-
+        self.interactive = interactive
+    
     def call(self):
         self.console.chat_response_start()
         if self.debug:
             console.print(self.messages)
-        response = completion(
-            model=self.model_name,
-            messages=self.messages,
-            max_tokens=1000,
-            stream=True,
-        )
-        final_response = ""
-        for chunk in response:
-            if chunk.choices[0].delta.content:
-                final_response += chunk.choices[0].delta.content
-                self.console.chat_message_content_delta(f"[bold green]{chunk.choices[0].delta.content}[/bold green]")
-        self.console.chat_response_complete()
-        return final_response
+        if not self.interactive:
+            response = completion(
+                model=self.model_name,
+                messages=self.messages,
+                max_tokens=1000,
+                response_format=LLMResponse,
+            )
+            response = response.choices[0].message.content
+            final_response = LLMResponse.model_validate_json(response)
+            self.console.print(f"[bold green]{final_response.response}[/bold green]")
+            self.exec(final_response.command)
+            return final_response.response
+        else:
+            response = completion(
+                model=self.model_name,
+                messages=self.messages,
+                max_tokens=1000,
+                stream=True,
+            )
+            final_response = ""
+            for chunk in response:
+                if chunk.choices[0].delta.content:
+                    final_response += chunk.choices[0].delta.content
+                    self.console.chat_message_content_delta(f"[bold green]{chunk.choices[0].delta.content}[/bold green]")
+            self.console.chat_response_complete()
+            return final_response
 
     def append(self, role, content):
         self.messages.append({"role": role, "content": content})
@@ -94,12 +117,11 @@ class LLM:
         cmd = cmd.replace("`", "")
         q = self.console.input(f"[bold red]Execute this command (press return to run):[/] \n$ {cmd}").lower()
         if (q == "y") or (q == ""):
-            self.run_cmd(cmd)
+            output = run_command(cmd)
+            self.console.print(output["output"])
         else:
             pass
 
-    def run_cmd(self, cmd):
-        run_command(cmd)
 
     def input(self):
         return self.console.input()
