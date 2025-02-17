@@ -4,8 +4,7 @@ from sys import platform
 assistant_role = "You are a helpful assistant."
 
 commander_role = dedent(f"""\
-    You are a terminal assistant, you will help me find the right terminal
-    command to perform the given action.
+    You are a terminal assistant, you will help me find the right terminal command to perform the given action.
     - We are running on {platform}.
     - Reply only with the terminal command required to perform the action. Nothing else. 
     - Reply in plain text, no fancy output.

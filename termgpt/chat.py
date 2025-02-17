@@ -1,38 +1,38 @@
 import argparse, atexit
 from dataclasses import dataclass
 
-from termgpt.models import OpenAIChat
+import simple_parsing as sp
 
-# Anthropic
-CLAUDE = "claude-2"
+from termgpt.llm import LLM
 
-# OpenAI
-GPT3 = "gpt-3.5-turbo"
-GPT4 = "gpt-4"
+DEFAULT_LLM = "gpt-4o"
 
-def parse_args():
-    parser = argparse.ArgumentParser(usage="termGPT [options] [file]", description="Chat with GPT-3/4. If no file is provided, you will be prompted to enter a question.")
-    parser.add_argument("file", type=str, nargs="?", default=None, help="File to read [optional]")
-    parser.add_argument("-r", "--resume", action="store_true", help="Resume previous session")
-    parser.add_argument("-c", "--command", type=str, default=None, help="Command to run [optional]")
-    parser.add_argument("-o", "--outfile", type=str, default=None, help="Output file [optional]")
-    parser.add_argument("-no_md", "--no_markdown", action="store_false", help="Disable markdown rendering")
-    return parser.parse_args()
+@dataclass
+class Args:
+    resume: bool = False # Resume previous session
+    command: str = None # Command mode, ask for a command to run
+    outfile: str = None # Output file to save conversation
+    no_markdown: bool = True # Disable markdown rendering
+
 
 exit_commands = ["exit", "quit", "q", "bye", "goodbye", "stop", "end", "finish", "done"]
 
 def main(model_name):
-    args = parse_args()
-    if model_name == CLAUDE:
-        from termgpt.models.anthropic import AnthropicChat
-        chat = AnthropicChat(model_name=CLAUDE, file=args.file, resume=args.resume, command=args.command, out_file=args.outfile, markdown=args.no_markdown)
-    else:
-        chat = OpenAIChat(model_name, file=args.file, resume=args.resume, command=args.command, out_file=args.outfile, markdown=args.no_markdown)
+    args = sp.parse(Args)
+    chat = LLM(
+        model_name=model_name, 
+        resume=args.resume, 
+        command=args.command, 
+        out_file=args.outfile, 
+        markdown=args.no_markdown
+        )
     atexit.register(chat.save)
     if not args.command:
-        while (q := chat.input()) not in exit_commands:
-            _ = chat(q)
+        try:
+            while (q := chat.input()) not in exit_commands:
+                _ = chat(q)
+        except (KeyboardInterrupt, EOFError):
+            print()  # Add a newline for cleaner exit
+            pass
 
-def gpt3(): main(GPT3)
-def gpt4(): main(GPT4)
-def claude(): main(CLAUDE)
+def llm(): main(DEFAULT_LLM)

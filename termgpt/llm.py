@@ -4,12 +4,25 @@ from rich.text import Text
 from rich.console import Console
 from rich.markdown import Markdown
 
+
+from litellm import completion
+
 from termgpt.roles import assistant_role, document_role, commander_role
 
-class ChatWithHistory:
-    """Class to handle chat with chatGPT, supports history and load from file"""
+DEFAULT_LLM = "gpt-4o"
 
-    def __init__(self, file=None, resume=False, command=None, out_file=None, markdown=True):
+class LLM:
+    """Class to handle chat with LLM, supports history."""
+
+    def __init__(
+            self, 
+            model_name: str = DEFAULT_LLM, 
+            resume: bool = False, 
+            command: str = None, 
+            out_file: str = None, 
+            markdown: bool = True
+            ):
+        self.model_name = model_name
         self.console = console = Console()
         self.history_file = "chatgpt_history.json"
         self.out_file=out_file
@@ -24,9 +37,24 @@ class ChatWithHistory:
             with open(self.history_file, "r") as f:
                 self.history = json.load(f)
                 self._print_history(self.history)
-        if file:
-            with open(file, "r") as f:
-                self.history = [{"role": "system", "content":  document_role + f.read()}, ]
+
+    def call(self):
+        prompt = self.preprocess_query()
+        response = completion(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1000,
+        )
+        return response.choices[0].message.content
+
+    def preprocess_query(self):
+        query = ""
+        for h in self.history:
+            if h["role"] == "user" or h["role"] == "system":
+                query += "\n\nHuman: " + h["content"] + "\n"
+            elif h["role"] == "assistant":
+                query += "\n\nAssistant: "+ h["content"] + "\n"
+        return query
 
     def _print_history(self, history):
         self.console.print("--Resuming previous session--")
@@ -40,9 +68,6 @@ class ChatWithHistory:
 
     def append(self, role, content):
         self.history.append({"role": role, "content": content})
-    
-    def call(self, question):
-        pass
 
     def __call__(self, question):
         self.append("user", question)
