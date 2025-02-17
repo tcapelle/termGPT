@@ -7,7 +7,7 @@ from rich.markdown import Markdown
 
 from litellm import completion
 
-from termgpt.roles import assistant_role, document_role, commander_role
+from termgpt.roles import assistant_role, commander_role
 
 DEFAULT_LLM = "gpt-4o"
 

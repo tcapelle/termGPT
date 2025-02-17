@@ -15,12 +15,6 @@ commander_role = dedent(f"""\
     reply: touch hello.txt instead of echo > hello.txt
     """)
 
-document_role = dedent("""\
-    I will ask question about this document. Use this document as context to answer.
-    The document:
-    """)
-
 if __name__ == "__main__":
     print(f"assistant_role = {assistant_role!r}")
     print(f"commander_role = {commander_role!r}")
-    print(f"document_role = {document_role!r}")
