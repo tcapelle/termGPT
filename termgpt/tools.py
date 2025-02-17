@@ -1,5 +1,6 @@
 import inspect
 import subprocess
+import os
 from typing import Callable, get_type_hints, Any
 
 def generate_json_schema(func: Callable) -> dict:
@@ -78,14 +79,14 @@ def generate_json_schema(func: Callable) -> dict:
 
     return schema
 
-def run_command(self, command: str) -> dict:
+def run_command(command: str) -> dict:
     completed_process = subprocess.run(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
         shell=True,
-        cwd=self.directory,
+        cwd=os.getcwd(),
     )
     exit_code = completed_process.returncode
     output = completed_process.stdout.strip()
