@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "termgpt"
+dynamic = ["version"]
+description = "A chatGPT client on the terminal"
+authors = [
+    { name = "Thomas Capelle", email = "tcapelle@pm.me" },
+]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+]
+keywords = [
+    "artificial intelligence",
+    "generative models",
+    "natural language processing",
+    "openai",
+]
+dependencies = [
+    "rich",
+    "litellm",
+    "simple-parsing",
+]
+
+[project.urls]
+Homepage = "https://github.com/tcapelle/termgpt"
+
+[project.scripts]
+llm = "termgpt.chat:llm"
+
+[tool.hatch.version]
+path = "termgpt/version.py" 
